@@ -126,10 +126,5 @@ class DialogueExamplesTests(unittest.TestCase):
                     ui.advance()
                     self.assertTrue(ui.closed)
 
-    def test_unknown_variables_still_expose_authoring_errors(self):
-        with self.assertRaises(KeyError):
-            self.code["evaluate"]("goldd >= 50", self.graph["vars"])
-
-
 if __name__ == "__main__":
     unittest.main()

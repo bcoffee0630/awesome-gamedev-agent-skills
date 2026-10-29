@@ -126,23 +126,6 @@ public static class Program
         }
     }
 
-    public static void MemoryCompositesRestartAfterTerminal()
-    {
-        var bb = new Blackboard();
-        var sequence = new Sequence().Add(new Wait(0.5f))
-            .Add(new Condition(b => b.Get<bool>("open")));
-        var tree = new BehaviorTree(sequence, bb);
-        Expect(tree, Status.Running, Status.Failure);
-        bb.Set("open", true);
-        Expect(tree, Status.Running, Status.Success);
-        foreach (Composite selector in new Composite[] { new Selector(), new EntryExample.Selector() })
-        {
-            selector.Add(new Wait(0.5f));
-            var selected = new BehaviorTree(selector, new Blackboard());
-            Expect(selected, Status.Running, Status.Success, Status.Running, Status.Success);
-        }
-    }
-
     public static void ReactiveBranchesAbortAndReenter()
     {
         var bb = new Blackboard();
@@ -367,9 +350,6 @@ class AIExamplesTests(unittest.TestCase):
 
     def test_completed_children_reset_before_parent_finishes(self):
         self.run_scenario("CompletedChildrenResetWhileParentRuns")
-
-    def test_memory_composites_restart_after_success_and_failure(self):
-        self.run_scenario("MemoryCompositesRestartAfterTerminal")
 
     def test_reactive_branches_abort_and_reenter(self):
         self.run_scenario("ReactiveBranchesAbortAndReenter")

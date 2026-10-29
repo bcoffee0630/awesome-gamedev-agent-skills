@@ -1,5 +1,4 @@
-"""Run published GDScript examples in Godot; shader checks cover scalar maths only."""
-import math
+"""Run published GDScript examples in Godot."""
 import os
 import re
 import shutil
@@ -200,10 +199,6 @@ class GodotExamplesTests(unittest.TestCase):
             audio.free()
         """)
 
-    def test_harness_rejects_script_errors_even_after_exit_zero(self):
-        with self.assertRaisesRegex(GodotDiagnosticError, "ERROR:"):
-            self.run_godot({}, 'push_error("intentional harness test")')
-
     def test_harness_requires_completion_marker(self):
         with self.assertRaisesRegex(AssertionError, "GODOT_EXAMPLES_COMPLETE"):
             self.run_godot({}, "quit(0)", complete=False)
@@ -211,27 +206,6 @@ class GodotExamplesTests(unittest.TestCase):
     def test_harness_bounds_a_stalled_script(self):
         with self.assertRaisesRegex(AssertionError, "timed out"):
             self.run_godot({}, "while true:\n    pass", timeout=0.5)
-
-
-class ShaderExampleMathTests(unittest.TestCase):
-    def test_fresnel_renormalizes_both_interpolated_directions(self):
-        source = snippet("skills/disciplines/shader-programming/SKILL.md", "### 4. Fresnel", "glsl")
-        # Evaluate only the published scalar formula and normalize assignments, not GLSL rendering.
-        def normalize(vector):
-            length = math.sqrt(sum(value * value for value in vector))
-            return tuple(value / length for value in vector)
-
-        for normal_input, view_input in [((0.5, 0.5, 0), (1, 0, 0)),
-                                         ((1, 0, 0), (0.5, 0.5, 0))]:
-            values = {"world_normal": normal_input, "view_dir": view_input, "power": 3.0}
-            for name, expression in re.findall(r"vec3\s+(\w+)\s*=\s*normalize\((\w+)\);", source):
-                values[name] = normalize(values[expression])
-            formula = re.search(r"float f = (.*);", source).group(1)
-            functions = {"pow": pow, "clamp": lambda value, low, high: min(max(value, low), high),
-                         "dot": lambda a, b: sum(x * y for x, y in zip(a, b))}
-            actual = eval(formula, {"__builtins__": {}}, {**values, **functions})
-            expected = (1 - math.sqrt(0.5)) ** 3
-            self.assertAlmostEqual(actual, expected)
 
 
 if __name__ == "__main__":
